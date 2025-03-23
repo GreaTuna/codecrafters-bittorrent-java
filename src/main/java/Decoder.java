@@ -6,23 +6,31 @@ public class Decoder {
         DICTIONARY,
     }
 
-    public String decodeBencode(String bencodedString) {
+    public sealed interface DecodedValue permits DecodedInteger, DecodedString {}
+    public record DecodedInteger(Long value) implements DecodedValue {}
+    public record DecodedString(String value) implements DecodedValue {}
+
+    public DecodedValue decodeBencode(String bencodedString) {
         if (bencodedString == null) {
             throw new NullPointerException("bencodedString must not be null");
         }
 
         BencodedStringType type = this.getBencodedType(bencodedString);
         return switch (type) {
-            case BencodedStringType.STRING -> this.decodeBencodedString(bencodedString);
-            case BencodedStringType.INTEGER -> "INTEGER";
-            case BencodedStringType.LIST  -> "LIST";
-            case BencodedStringType.DICTIONARY -> "DICTIONARY";
+            case BencodedStringType.STRING -> new DecodedString(this.decodeBencodedString(bencodedString));
+            case BencodedStringType.INTEGER -> new DecodedInteger(this.decodeBencodedInteger(bencodedString));
+            case BencodedStringType.LIST  -> throw new RuntimeException("Invalid string format");
+            case BencodedStringType.DICTIONARY -> throw new RuntimeException("Invalid string format");
         };
     }
 
     private String decodeBencodedString(String bencodedString) {
         int firstColonIndex = bencodedString.indexOf(':');
         return bencodedString.substring(firstColonIndex + 1);
+    }
+
+    private Long decodeBencodedInteger(String bencodedString) {
+        return Long.parseLong(bencodedString.substring(1, bencodedString.length() - 1));
     }
 
     private BencodedStringType getBencodedType(String bencodedString) {

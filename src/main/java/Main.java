@@ -10,14 +10,19 @@ public class Main {
         String command = args[0];
         if("decode".equals(command)) {
             String bencodedValue = args[1];
-            String decoded;
+            Decoder.DecodedValue decoded;
             try {
                 decoded = decoder.decodeBencode(bencodedValue);
             } catch(RuntimeException e) {
                 System.out.println(e.getMessage());
                 return;
             }
-            System.out.println(gson.toJson(decoded));
+
+            if (decoded instanceof Decoder.DecodedInteger decodedInteger) {
+                System.out.println(decodedInteger.value());
+            } else if (decoded instanceof Decoder.DecodedString decodedString) {
+                System.out.println(gson.toJson(decodedString.value()));
+            }
         } else {
             System.out.println("Unknown command: " + command);
         }
